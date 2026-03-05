@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✿ Calc ✿</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Playpen+Sans:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── Variables ───────────────────────────────────────────────────── */
+    :root {
+      --bg:          #fde8f0;
+      --bg2:         #fbd0e2;
+      --card:        #fff5f9;
+      --card-border: #f9c4d8;
+
+      --pink-deep:   #e8628a;
+      --pink-mid:    #f093b0;
+      --pink-light:  #fac8d8;
+      --pink-pale:   #fde8f0;
+
+      --cream:       #fff8f0;
+      --lilac:       #e8d5f5;
+      --lilac-deep:  #c9a8e8;
+      --mint:        #c8eed8;
+      --mint-deep:   #7dcca0;
+      --peach:       #ffd5b8;
+      --peach-deep:  #f0a070;
+
+      --text:        #5a2d42;
+      --text-soft:   #9a6878;
+      --text-muted:  #c8a0b0;
+
+      --shadow-sm:   0 2px 8px rgba(232,98,138,0.15);
+      --shadow-md:   0 6px 20px rgba(232,98,138,0.2);
+      --shadow-lg:   0 12px 40px rgba(232,98,138,0.25);
+
+      --radius:      1.4rem;
+      --radius-sm:   0.8rem;
+      --btn-size:    3.6rem;
+    }
+
+    /* ── Reset ───────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Body ────────────────────────────────────────────────────────── */
+    body {
+      min-height: 100dvh;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Nunito', sans-serif;
+      overflow: hidden;
+      position: relative;
+      cursor: default;
+    }
+
+    /* Floating deco blobs */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    body::before {
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, #f7b8d0 0%, transparent 70%);
+      top: -140px; left: -100px;
+      animation: blobDrift 12s ease-in-out infinite alternate;
+    }
+    body::after {
+      width: 320px; height: 320px;
+      background: radial-gradient(circle, #e8d5f5 0%, transparent 70%);
+      bottom: -80px; right: -60px;
+      animation: blobDrift 16s ease-in-out infinite alternate-reverse;
+    }
+    @keyframes blobDrift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(30px, 20px) scale(1.06); }
+    }
+
+    /* Tiny stars */
+    .stars { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+    .star {
+      position: absolute;
+      font-size: 1rem;
+      opacity: 0.35;
+      animation: twinkle 3s ease-in-out infinite alternate;
+    }
+    @keyframes twinkle {
+      from { opacity: 0.2; transform: scale(0.9); }
+      to   { opacity: 0.6; transform: scale(1.1); }
+    }
+
+    /* ── Calculator shell ────────────────────────────────────────────── */
+    .calc {
+      position: relative;
+      z-index: 1;
+      background: var(--card);
+      border: 2px solid var(--card-border);
+      border-radius: calc(var(--radius) * 1.5);
+      padding: 1.4rem 1.3rem 1.5rem;
+      width: min(390px, 96vw);
+      box-shadow: var(--shadow-lg), 0 0 0 6px rgba(249,196,216,0.35);
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      animation: popIn 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.88) translateY(20px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Top deco strip */
+    .deco-strip {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: -0.2rem;
+    }
+    .deco-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .deco-dot:nth-child(1) { background: #f9c4d8; }
+    .deco-dot:nth-child(2) { background: var(--lilac-deep); }
+    .deco-dot:nth-child(3) { background: var(--mint-deep); }
+    .deco-dot:nth-child(4) { background: var(--peach-deep); }
+    .deco-dot:nth-child(5) { background: #f9c4d8; }
+
+    /* ── Display ─────────────────────────────────────────────────────── */
+    .display {
+      background: linear-gradient(135deg, #fff0f6 0%, #fde8f0 100%);
+      border: 2px solid var(--pink-light);
+      border-radius: var(--radius);
+      padding: 1rem 1.3rem 0.8rem;
+      text-align: right;
+      box-shadow: inset 0 2px 8px rgba(232,98,138,0.08);
+      min-height: 6.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+    .display::before {
+      content: '✿';
+      position: absolute;
+      top: 0.5rem; left: 0.8rem;
+      font-size: 1rem;
+      opacity: 0.3;
+      color: var(--pink-deep);
+    }
+
+    .display-expression {
+      font-family: 'Nunito', sans-serif;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      min-height: 1.1rem;
+      letter-spacing: 0.02em;
+      word-break: break-all;
+    }
+
+    .display-value {
+      font-family: 'Playpen Sans', cursive;
+      font-size: clamp(1.8rem, 7vw, 2.6rem);
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      word-break: break-all;
+      transition: transform 0.1s ease;
+    }
+    .display-value.pop {
+      animation: valuePop 0.15s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes valuePop {
+      from { transform: scale(0.94); }
+      to   { transform: scale(1); }
+    }
+
+    /* ── Scientific row toggle ───────────────────────────────────────── */
+    .sci-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0 0.2rem;
+    }
+    .sci-toggle span {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      flex: 1;
+    }
+    .toggle-btn {
+      background: var(--pink-light);
+      border: none;
+      border-radius: 2rem;
+      width: 2.8rem; height: 1.4rem;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.25s;
+    }
+    .toggle-btn.on { background: var(--pink-deep); }
+    .toggle-btn::after {
+      content: '';
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 1rem; height: 1rem;
+      border-radius: 50%;
+      background: white;
+      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-btn.on::after { transform: translateX(1.4rem); }
+
+    /* ── Scientific keys panel ───────────────────────────────────────── */
+    .sci-panel {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.45rem;
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      transition: max-height 0.35s ease, opacity 0.25s ease;
+    }
+    .sci-panel.open {
+      max-height: 12rem;
+      opacity: 1;
+    }
+
+    /* ── Button grid ─────────────────────────────────────────────────── */
+    .btn-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+    }
+
+    /* ── Base button ─────────────────────────────────────────────────── */
+    button.key {
+      height: var(--btn-size);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: 'Nunito', sans-serif;
+      font-size: 1rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition:
+        transform 0.1s cubic-bezier(0.34,1.56,0.64,1),
+        box-shadow 0.15s ease,
+        filter 0.15s ease;
+      position: relative;
+      overflow: hidden;
+      letter-spacing: 0.01em;
+    }
+    button.key::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(255,255,255,0.25);
+      opacity: 0;
+      transition: opacity 0.15s;
+      border-radius: inherit;
+    }
+    button.key:hover::after { opacity: 1; }
+    button.key:active {
+      transform: scale(0.91) translateY(2px) !important;
+      filter: brightness(0.92);
+    }
+
+    /* Number keys — creamy white */
+    button.key.num {
+      background: linear-gradient(145deg, #fffaf8 0%, #fff0f5 100%);
+      color: var(--text);
+      border: 1.5px solid #f5d8e8;
+      box-shadow: 0 3px 0 #f0c8d8, var(--shadow-sm);
+    }
+    button.key.num:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 0 #f0c8d8, var(--shadow-md);
+    }
+
+    /* Operator keys — pink */
+    button.key.op {
+      background: linear-gradient(145deg, #f9afc8 0%, #f07098 100%);
+      color: white;
+      border: 1.5px solid #e8608a;
+      box-shadow: 0 3px 0 #c84870, var(--shadow-sm);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    }
+    button.key.op:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 0 #c84870, var(--shadow-md);
+    }
+    button.key.op.active-op {
+      background: linear-gradient(145deg, #e8608a 0%, #c84870 100%);
+      box-shadow: 0 1px 0 #a03058, inset 0 1px 3px rgba(0,0,0,0.2);
+      transform: translateY(2px);
+    }
+
+    /* Equals — deep pink gradient */
+    button.key.eq {
+      background: linear-gradient(145deg, #ff90b8 0%, #e8457a 50%, #c82060 100%);
+      color: white;
+      border: 1.5px solid #c02058;
+      box-shadow: 0 4px 0 #901840, 0 6px 16px rgba(232,69,122,0.4);
+      font-size: 1.3rem;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    button.key.eq:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 0 #901840, 0 10px 24px rgba(232,69,122,0.5);
+    }
+
+    /* Clear — lilac */
+    button.key.clear {
+      background: linear-gradient(145deg, #ecddf8 0%, #d8b8f0 100%);
+      color: var(--lilac-deep);
+      border: 1.5px solid #c8a0e0;
+      box-shadow: 0 3px 0 #b088c8, var(--shadow-sm);
+      font-size: 0.85rem;
+    }
+    button.key.clear:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 0 #b088c8, var(--shadow-md);
+    }
+
+    /* Backspace — peach */
+    button.key.back {
+      background: linear-gradient(145deg, #ffe8d0 0%, #ffcca0 100%);
+      color: var(--peach-deep);
+      border: 1.5px solid #f0b888;
+      box-shadow: 0 3px 0 #d89060, var(--shadow-sm);
+    }
+    button.key.back:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 0 #d89060, var(--shadow-md);
+    }
+
+    /* Scientific keys — mint */
+    button.key.sci {
+      background: linear-gradient(145deg, #d8f5e4 0%, #b0e8c8 100%);
+      color: #3a8060;
+      border: 1.5px solid #90d8b0;
+      box-shadow: 0 3px 0 #60b088, var(--shadow-sm);
+      font-size: 0.78rem;
+      font-weight: 700;
+      height: 2.8rem;
+    }
+    button.key.sci:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 5px 0 #60b088, var(--shadow-md);
+    }
+
+    /* Wide button (zero) */
+    button.key.wide { grid-column: span 2; }
+
+    /* ── Bottom label ─────────────────────────────────────────────────── */
+    .footer-label {
+      text-align: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Floating stars -->
+<div class="stars" aria-hidden="true" id="stars"></div>
+
+<div class="calc" role="main" aria-label="Calculator">
+
+  <div class="deco-strip">
+    <div class="deco-dot"></div><div class="deco-dot"></div>
+    <div class="deco-dot"></div><div class="deco-dot"></div>
+    <div class="deco-dot"></div>
+  </div>
+
+  <!-- Display -->
+  <div class="display">
+    <div class="display-expression" id="expression" aria-live="polite"></div>
+    <div class="display-value" id="display" aria-live="assertive">0</div>
+  </div>
+
+  <!-- Scientific toggle -->
+  <div class="sci-toggle">
+    <span>✦ scientific mode</span>
+    <button class="toggle-btn" id="sci-toggle" aria-pressed="false" aria-label="Toggle scientific mode"></button>
+  </div>
+
+  <!-- Scientific panel -->
+  <div class="sci-panel" id="sci-panel" aria-hidden="true">
+    <button class="key sci" data-sci="sin">sin</button>
+    <button class="key sci" data-sci="cos">cos</button>
+    <button class="key sci" data-sci="tan">tan</button>
+    <button class="key sci" data-sci="log">log</button>
+    <button class="key sci" data-sci="square">x²</button>
+    <button class="key sci" data-sci="sqrt">√</button>
+    <button class="key sci" data-sci="inv">1/x</button>
+    <button class="key sci" data-sci="abs">|x|</button>
+    <button class="key sci" data-sci="pow">xʸ</button>
+    <button class="key sci" data-sci="pct">%</button>
+    <button class="key sci" data-sci="pi">π</button>
+    <button class="key sci" data-sci="e">e</button>
+  </div>
+
+  <!-- Main button grid -->
+  <div class="btn-grid">
+    <button class="key clear" data-action="clear">AC</button>
+    <button class="key back"  data-action="back">⌫</button>
+    <button class="key op"    data-op="pow-op">xʸ</button>
+    <button class="key op"    data-op="divide">÷</button>
+
+    <button class="key num" data-num="7">7</button>
+    <button class="key num" data-num="8">8</button>
+    <button class="key num" data-num="9">9</button>
+    <button class="key op"  data-op="multiply">×</button>
+
+    <button class="key num" data-num="4">4</button>
+    <button class="key num" data-num="5">5</button>
+    <button class="key num" data-num="6">6</button>
+    <button class="key op"  data-op="minus">−</button>
+
+    <button class="key num" data-num="1">1</button>
+    <button class="key num" data-num="2">2</button>
+    <button class="key num" data-num="3">3</button>
+    <button class="key op"  data-op="add">+</button>
+
+    <button class="key num" data-action="sign">±</button>
+    <button class="key num" data-num="0">0</button>
+    <button class="key num" data-action="dot">.</button>
+    <button class="key eq"  data-action="equals">=</button>
+  </div>
+
+  <div class="footer-label">✿ made with love ✿</div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ── State ──────────────────────────────────────────────────────────────
+  const state = {
+    display:      '0',
+    expression:   '',
+    num1:          null,
+    num2:          null,
+    operator:      null,       // 'add' | 'minus' | 'multiply' | 'divide' | 'pow-op'
+    waitingForNum2: false,
+    justEvaled:    false,
+  };
+
+  // ── DOM refs ───────────────────────────────────────────────────────────
+  const displayEl    = document.getElementById('display');
+  const expressionEl = document.getElementById('expression');
+  const sciToggleBtn = document.getElementById('sci-toggle');
+  const sciPanel     = document.getElementById('sci-panel');
+
+  // ── Display helpers ────────────────────────────────────────────────────
+  function setDisplay(val) {
+    // Format nicely — cap decimals to avoid floating-point noise
+    let str = typeof val === 'number'
+      ? (isNaN(val) ? 'Error ✿' : parseFloat(val.toPrecision(10)).toString())
+      : val;
+    state.display = str;
+    displayEl.textContent = str;
+    displayEl.classList.remove('pop');
+    void displayEl.offsetWidth; // reflow
+    displayEl.classList.add('pop');
+  }
+
+  function setExpression(str) {
+    state.expression = str;
+    expressionEl.textContent = str;
+  }
+
+  const opSymbol = { add: '+', minus: '−', multiply: '×', divide: '÷', 'pow-op': 'xʸ' };
+
+  // ── Number input ───────────────────────────────────────────────────────
+  function inputDigit(d) {
+    if (state.waitingForNum2) {
+      state.display = d;
+      state.waitingForNum2 = false;
+    } else {
+      state.display = state.display === '0' || state.justEvaled
+        ? d
+        : state.display + d;
+    }
+    state.justEvaled = false;
+    setDisplay(state.display);
+  }
+
+  function inputDot() {
+    if (state.waitingForNum2) { state.display = '0'; state.waitingForNum2 = false; }
+    if (!state.display.includes('.')) setDisplay(state.display + '.');
+    state.justEvaled = false;
+  }
+
+  function toggleSign() {
+    const n = parseFloat(state.display) * -1;
+    setDisplay(n);
+  }
+
+  // ── Operator ───────────────────────────────────────────────────────────
+  function handleOperator(op) {
+    const current = parseFloat(state.display);
+
+    // Chain operations
+    if (state.operator && !state.waitingForNum2) {
+      state.num2 = current;
+      const result = calculate(state.num1, state.num2, state.operator);
+      setDisplay(result);
+      state.num1 = result;
+      setExpression(`${result} ${opSymbol[op]}`);
+    } else {
+      state.num1 = current;
+      setExpression(`${current} ${opSymbol[op]}`);
+    }
+
+    state.operator = op;
+    state.waitingForNum2 = true;
+    state.justEvaled = false;
+    highlightOp(op);
+  }
+
+  function handleEquals() {
+    if (state.operator === null) return;
+    const current = parseFloat(state.display);
+    state.num2 = current;
+    const result = calculate(state.num1, state.num2, state.operator);
+    setExpression(`${state.num1} ${opSymbol[state.operator]} ${state.num2} =`);
+    setDisplay(result);
+    state.num1 = result;
+    state.operator = null;
+    state.waitingForNum2 = false;
+    state.justEvaled = true;
+    highlightOp(null);
+  }
+
+  // ── Core calculation ───────────────────────────────────────────────────
+  function calculate(a, b, op) {
+    switch (op) {
+      case 'add':      return a + b;
+      case 'minus':    return a - b;
+      case 'multiply': return a * b;
+      case 'divide':   return b !== 0 ? a / b : NaN;
+      case 'pow-op':   return Math.pow(a, b);
+      default:         return b;
+    }
+  }
+
+  // ── Scientific mono operations ─────────────────────────────────────────
+  function handleSci(mode) {
+    const n = parseFloat(state.display);
+    let result;
+    switch (mode) {
+      case 'sin':    result = Math.sin(toRad(n)); break;
+      case 'cos':    result = Math.cos(toRad(n)); break;
+      case 'tan':    result = tanSafe(n);          break;
+      case 'log':    result = Math.log10(n);       break;
+      case 'square': result = n * n;               break;
+      case 'sqrt':   result = Math.sqrt(n);        break;
+      case 'inv':    result = n !== 0 ? 1 / n : NaN; break;
+      case 'abs':    result = Math.abs(n);         break;
+      case 'pow':    handleOperator('pow-op'); return; // chains into binary
+      case 'pct':    result = n / 100;             break;
+      case 'pi':     result = Math.PI;             break;
+      case 'e':      result = Math.E;              break;
+      default:       return;
+    }
+    setExpression(`${mode}(${n})`);
+    setDisplay(result);
+    state.justEvaled = true;
+  }
+
+  function toRad(deg) { return (deg * Math.PI) / 180; }
+
+  function tanSafe(deg) {
+    if (deg % 180 === 0) return 0;
+    if (deg % 90 === 0)  return NaN; // undefined
+    return Math.tan(toRad(deg));
+  }
+
+  // ── Clear / back ───────────────────────────────────────────────────────
+  function clearAll() {
+    state.num1 = null; state.num2 = null;
+    state.operator = null;
+    state.waitingForNum2 = false;
+    state.justEvaled = false;
+    setDisplay('0');
+    setExpression('');
+    highlightOp(null);
+  }
+
+  function backspace() {
+    if (state.display.length <= 1 || state.justEvaled) {
+      setDisplay('0');
+    } else {
+      setDisplay(state.display.slice(0, -1) || '0');
+    }
+  }
+
+  // ── Active operator highlight ──────────────────────────────────────────
+  function highlightOp(op) {
+    document.querySelectorAll('.key.op').forEach(b => {
+      b.classList.toggle('active-op', b.dataset.op === op);
+    });
+  }
+
+  // ── Keyboard support ───────────────────────────────────────────────────
+  const keyMap = {
+    '0':'0','1':'1','2':'2','3':'3','4':'4',
+    '5':'5','6':'6','7':'7','8':'8','9':'9',
+    '+': () => handleOperator('add'),
+    '-': () => handleOperator('minus'),
+    '*': () => handleOperator('multiply'),
+    '/': () => handleOperator('divide'),
+    'Enter': handleEquals,
+    '=': handleEquals,
+    'Backspace': backspace,
+    'Escape': clearAll,
+    '.': inputDot,
+  };
+
+  document.addEventListener('keydown', e => {
+    const handler = keyMap[e.key];
+    if (!handler) return;
+    e.preventDefault();
+    typeof handler === 'function' ? handler() : inputDigit(handler);
+  });
+
+  // ── Button click delegation ────────────────────────────────────────────
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('button.key');
+    if (!btn) return;
+
+    if (btn.dataset.num      !== undefined) { inputDigit(btn.dataset.num); return; }
+    if (btn.dataset.op       !== undefined) { handleOperator(btn.dataset.op); return; }
+    if (btn.dataset.sci      !== undefined) { handleSci(btn.dataset.sci); return; }
+
+    switch (btn.dataset.action) {
+      case 'clear':  clearAll();   break;
+      case 'back':   backspace();  break;
+      case 'equals': handleEquals(); break;
+      case 'dot':    inputDot();   break;
+      case 'sign':   toggleSign(); break;
+    }
+  });
+
+  // ── Scientific panel toggle ────────────────────────────────────────────
+  sciToggleBtn.addEventListener('click', () => {
+    const open = sciPanel.classList.toggle('open');
+    sciToggleBtn.classList.toggle('on', open);
+    sciToggleBtn.setAttribute('aria-pressed', open);
+    sciPanel.setAttribute('aria-hidden', !open);
+  });
+
+  // ── Decorative stars ───────────────────────────────────────────────────
+  const starsEl = document.getElementById('stars');
+  const starChars = ['✦','✧','✿','❀','·','✸','★'];
+  for (let i = 0; i < 22; i++) {
+    const s = document.createElement('span');
+    s.className = 'star';
+    s.textContent = starChars[Math.floor(Math.random() * starChars.length)];
+    s.style.cssText = `
+      left: ${Math.random() * 100}%;
+      top:  ${Math.random() * 100}%;
+      font-size: ${0.5 + Math.random() * 0.9}rem;
+      animation-delay: ${Math.random() * 3}s;
+      animation-duration: ${2 + Math.random() * 3}s;
+    `;
+    starsEl.appendChild(s);
+  }
+})();
+</script>
+</body>
+</html>
